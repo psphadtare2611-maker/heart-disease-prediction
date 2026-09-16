@@ -1,5 +1,8 @@
 # Heart Disease Prediction using Machine Learning
 
+**Live demo:** https://heart-disease-prediction-mmd2.onrender.com
+*(hosted on Render's free tier - may take 30-50s to wake up after idling)*
+
 ## Overview
 
 This project provides a web interface for predicting the likelihood of heart disease
