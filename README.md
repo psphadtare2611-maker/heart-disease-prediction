@@ -66,6 +66,28 @@ python app.py
 
 Then open **http://127.0.0.1:5000** in your browser.
 
+## Deployment (Render)
+
+This repo includes a `render.yaml` so Render can deploy it with no manual
+configuration:
+
+1. Push the repo to GitHub (already done if you're reading this on GitHub).
+2. Go to [render.com](https://render.com) → **New** → **Blueprint**, and select
+   this repository. Render reads `render.yaml` and configures the service
+   automatically (build command `pip install -r requirements.txt`, start
+   command `gunicorn app:app`).
+3. Deploy. Render gives you a public URL such as
+   `https://heart-disease-prediction.onrender.com`.
+
+Every push to `main` triggers an automatic redeploy. Note: on Render's free
+plan the service spins down after ~15 minutes of inactivity, so the first
+request after idling takes 30-50 seconds to wake up.
+
+To deploy without the blueprint (manual setup), create a **Web Service**
+pointing at this repo with:
+- Build command: `pip install -r requirements.txt`
+- Start command: `gunicorn app:app`
+
 ## Project Structure
 
 ```
