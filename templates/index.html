@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heart Disease Risk Prediction</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<header class="app-header">
+  <div class="container">
+    <div class="d-flex align-items-center gap-2">
+      <span class="header-icon">&#10084;&#65039;</span>
+      <div>
+        <h1>Heart Disease Risk Prediction</h1>
+        <p class="subtitle">Machine Learning Based Health Risk Assessment</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container my-4 my-md-5">
+
+  {% if error %}
+  <div class="alert alert-danger form-alert" role="alert">
+    {{ error }}
+  </div>
+  {% endif %}
+
+  <div class="card main-card mx-auto">
+    <div class="card-body p-4 p-md-5">
+      <p class="text-muted mb-4">
+        Fill in the patient details below. All fields are required.
+      </p>
+
+      <form id="predict-form" action="{{ url_for('predict') }}" method="POST" novalidate>
+
+        <fieldset class="form-section">
+          <legend>Personal Information</legend>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="age" class="form-label">Age (years)</label>
+              <input type="number" class="form-control" id="age" name="age" min="1" max="120" required
+                     value="{{ form.age if form else '' }}" placeholder="e.g. 45">
+              <div class="form-text">Between 1 and 120 years.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label d-block">Sex</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="sex" id="sex_m" value="M" required
+                       {% if form and form.sex == 'M' %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="sex_m">Male</label>
+                <input type="radio" class="btn-check" name="sex" id="sex_f" value="F"
+                       {% if form and form.sex == 'F' %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="sex_f">Female</label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Health Information</legend>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label for="chest_pain_type" class="form-label">Chest Pain Type</label>
+              <select class="form-select" id="chest_pain_type" name="chest_pain_type" required>
+                <option value="" disabled {% if not form %}selected{% endif %}>Select type&hellip;</option>
+                {% for code, label in chest_pain_types.items() %}
+                <option value="{{ code }}" {% if form and form.chest_pain_type == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="resting_bp" class="form-label">Resting Blood Pressure (mm Hg)</label>
+              <input type="number" class="form-control" id="resting_bp" name="resting_bp" min="0" max="250" required
+                     value="{{ form.resting_bp if form else '' }}" placeholder="e.g. 130">
+              <div class="form-text">Typical resting systolic BP: 90&ndash;180.</div>
+            </div>
+            <div class="col-md-6">
+              <label for="cholesterol" class="form-label">Cholesterol (mg/dl)</label>
+              <input type="number" class="form-control" id="cholesterol" name="cholesterol" min="0" max="700" required
+                     value="{{ form.cholesterol if form else '' }}" placeholder="e.g. 220">
+              <div class="form-text">Enter 0 if unknown / not measured.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label d-block">Fasting Blood Sugar &gt; 120 mg/dl</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="fasting_bs" id="fbs_yes" value="1" required
+                       {% if form and form.fasting_bs == '1' %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="fbs_yes">Yes</label>
+                <input type="radio" class="btn-check" name="fasting_bs" id="fbs_no" value="0"
+                       {% if form and form.fasting_bs == '0' %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="fbs_no">No</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="resting_ecg" class="form-label">Resting ECG Result</label>
+              <select class="form-select" id="resting_ecg" name="resting_ecg" required>
+                <option value="" disabled {% if not form %}selected{% endif %}>Select result&hellip;</option>
+                {% for code, label in resting_ecg_types.items() %}
+                <option value="{{ code }}" {% if form and form.resting_ecg == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label for="max_hr" class="form-label">Maximum Heart Rate Achieved</label>
+              <input type="number" class="form-control" id="max_hr" name="max_hr" min="60" max="220" required
+                     value="{{ form.max_hr if form else '' }}" placeholder="e.g. 150">
+              <div class="form-text">Between 60 and 220 bpm.</div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Exercise / Lifestyle Information</legend>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label d-block">Exercise-Induced Angina</label>
+              <div class="btn-group w-100" role="group">
+                <input type="radio" class="btn-check" name="exercise_angina" id="angina_y" value="Y" required
+                       {% if form and form.exercise_angina == 'Y' %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="angina_y">Yes</label>
+                <input type="radio" class="btn-check" name="exercise_angina" id="angina_n" value="N"
+                       {% if form and form.exercise_angina == 'N' %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="angina_n">No</label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="oldpeak" class="form-label">Oldpeak (ST Depression)</label>
+              <input type="number" step="0.1" class="form-control" id="oldpeak" name="oldpeak" min="-3" max="7" required
+                     value="{{ form.oldpeak if form else '' }}" placeholder="e.g. 1.0">
+              <div class="form-text">ST depression induced by exercise, relative to rest.</div>
+            </div>
+            <div class="col-md-6">
+              <label for="st_slope" class="form-label">ST Slope (Peak Exercise)</label>
+              <select class="form-select" id="st_slope" name="st_slope" required>
+                <option value="" disabled {% if not form %}selected{% endif %}>Select slope&hellip;</option>
+                {% for code, label in st_slope_types.items() %}
+                <option value="{{ code }}" {% if form and form.st_slope == code %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
+          <button type="submit" id="submit-btn" class="btn btn-primary btn-lg flex-fill">Predict Heart Disease Risk</button>
+          <button type="reset" id="reset-btn" class="btn btn-outline-secondary btn-lg flex-fill">Reset Form</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Medical Disclaimer:</strong> This tool is intended for educational and research purposes only.
+    It is not a medical diagnostic tool and should not replace professional medical advice.
+    If you have concerns about your heart health, consult a qualified healthcare professional.
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
